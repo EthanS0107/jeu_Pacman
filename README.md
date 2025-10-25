@@ -1,6 +1,6 @@
 # Pac-Man Game
 
-Un jeu Pac-Man développé en Python avec Pygame.
+Un jeu Pac-Man développé en Python avec Tkinter.
 
 ## Structure du projet
 
