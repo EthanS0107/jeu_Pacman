@@ -32,6 +32,15 @@ class GameInterface:
         self.root = Tk()
         self.root.title("Pacman Game")
         self.root.geometry("710x515")
+        # Essayer de forcer le focus/fenêtre au premier plan (utile après 'Rejouer' sous Windows)
+        try:
+            self.root.lift()
+            self.root.attributes('-topmost', True)
+            # Retirer le flag topmost juste après pour permettre un comportement normal
+            self.root.after(100, lambda: self.root.attributes('-topmost', False))
+            self.root.focus_force()
+        except Exception:
+            pass
 
         self.canvas = Canvas(self.root, width=510,height=510, bg="black")
         self.canvas.place(x=0, y=0)
@@ -103,65 +112,170 @@ class GameInterface:
         
         # Détruit la fenêtre principale
         self.root.destroy()
-
-        # Crée la fenêtre de fin
+        # Crée la fenêtre de fin stylée
         end_window = Tk()
         end_window.title("Fin de la partie")
         end_window.geometry("710x515")
-        end_window.configure(bg="black")
+        end_window.configure(bg="#111111")
 
-        center_frame = Frame(end_window, bg="black")
+        # Mettre la fenêtre au premier plan et en focus
+        try:
+            end_window.lift()
+            end_window.attributes('-topmost', True)
+            end_window.after(100, lambda: end_window.attributes('-topmost', False))
+            end_window.focus_force()
+        except Exception:
+            pass
+
+        # Cadre central
+        center_frame = Frame(end_window, bg="#111111")
         center_frame.pack(expand=True)
 
+        # Message principal
         if result == "win":
-            message = "Félicitations, vous avez gagné !"
-            color = "green"
+            title_text = "Félicitations !"
+            subtitle_text = "Vous avez gagné la partie"
+            title_color = "#4CAF50"
         else:
-            message = "Dommage, vous avez perdu. Essayez encore !"
-            color = "red"
+            title_text = "Partie terminée"
+            subtitle_text = "Dommage, vous avez perdu."
+            title_color = "#F44336"
 
-        label = Label(center_frame, text=message, fg=color, bg="black", font=self.f_100)
-        label.pack(pady=(10, 20))
+        title_label = Label(center_frame, text=title_text, fg=title_color, bg="#111111", font=self.f)
+        title_label.pack(pady=(10, 5))
 
-        quit_button = Button(center_frame, text="Quitter", command=end_window.quit, font=("Arial", 14))
-        quit_button.pack()
+        subtitle_label = Label(center_frame, text=subtitle_text, fg="white", bg="#111111", font=("Arial", 20))
+        subtitle_label.pack(pady=(0, 10))
 
+        # Affiche le score final
+        try:
+            final_score = getattr(self.pacman, 'pacman_score', 0)
+        except Exception:
+            final_score = 0
+        score_label = Label(center_frame, text=f"Score: {final_score}", fg="#FFD54F", bg="#111111", font=("Arial", 26, "bold"))
+        score_label.pack(pady=(0, 20))
+
+        # Actions (boutons) horizontaux
+        action_frame = Frame(center_frame, bg="#111111")
+        action_frame.pack(pady=(0, 10))
+
+        replay_flag = {"value": False}
+
+        def on_replay(event=None):
+            replay_flag["value"] = True
+            try:
+                end_window.quit()
+            except Exception:
+                pass
+
+        def on_quit(event=None):
+            try:
+                end_window.quit()
+            except Exception:
+                pass
+
+        def on_menu(event=None):
+            # Ferme la fenêtre de fin puis appelle le menu centralisé (src.menu.show_menu)
+            try:
+                end_window.quit()
+                end_window.destroy()
+            except Exception:
+                pass
+            try:
+                from .menu import show_menu
+            except Exception:
+                try:
+                    from menu import show_menu
+                except Exception:
+                    show_menu = None
+            if show_menu:
+                try:
+                    show_menu()
+                except Exception:
+                    pass
+
+        replay_button = Button(action_frame, text="Rejouer", command=on_replay, bg="#2E8B57", fg="white", activebackground="#1E6B45", font=("Arial", 14), width=12)
+        replay_button.grid(row=0, column=0, padx=8)
+
+        menu_button = Button(action_frame, text="Menu", command=on_menu, bg="#3F51B5", fg="white", activebackground="#2E3A9A", font=("Arial", 14), width=12)
+        menu_button.grid(row=0, column=1, padx=8)
+
+        quit_button = Button(action_frame, text="Quitter", command=on_quit, bg="#9E9E9E", fg="white", activebackground="#7E7E7E", font=("Arial", 14), width=12)
+        quit_button.grid(row=0, column=2, padx=8)
+
+        # Raccourcis clavier : R = rejouer, Q = quitter
+        try:
+            end_window.bind('<r>', on_replay)
+            end_window.bind('<R>', on_replay)
+            end_window.bind('<q>', on_quit)
+            end_window.bind('<Q>', on_quit)
+        except Exception:
+            pass
+
+        # Forcer modalité et focus
+        try:
+            end_window.grab_set()
+        except Exception:
+            pass
+
+        # Affiche la fenêtre et attend interaction
         end_window.mainloop()
+
+        try:
+            end_window.destroy()
+        except Exception:
+            pass
+
+        # Si l'utilisateur a cliqué sur Rejouer, instancie une nouvelle partie
+        if replay_flag.get("value"):
+            GameInterface()
 
     def game_over(self):
          self.end_game("lose")
 
     def move_up(self, event):
+        prev_pos = (self.pacman.x, self.pacman.y)
         self.pacman.move("haut")
-        if not self.check_collision():
-            self.fantome_rouge.move()
-            self.fantome_rose.move()
-            self.fantome_orange.move()
-            self.fantome_bleu.move()
+        # Ne déplacer les fantômes que si Pac-Man a réellement bougé
+        if (self.pacman.x, self.pacman.y) != prev_pos:
+            if not self.check_collision():
+                self.fantome_rouge.move()
+                self.fantome_rose.move()
+                self.fantome_orange.move()
+                self.fantome_bleu.move()
 
     def move_down(self, event):
+        prev_pos = (self.pacman.x, self.pacman.y)
         self.pacman.move("bas")
-        if not self.check_collision():
-            self.fantome_rouge.move()
-            self.fantome_rose.move()
-            self.fantome_orange.move()
-            self.fantome_bleu.move()
+        # Ne déplacer les fantômes que si Pac-Man a réellement bougé
+        if (self.pacman.x, self.pacman.y) != prev_pos:
+            if not self.check_collision():
+                self.fantome_rouge.move()
+                self.fantome_rose.move()
+                self.fantome_orange.move()
+                self.fantome_bleu.move()
 
     def move_left(self, event):
+        prev_pos = (self.pacman.x, self.pacman.y)
         self.pacman.move("gauche")
-        if not self.check_collision():
-            self.fantome_rouge.move()
-            self.fantome_rose.move()
-            self.fantome_orange.move()
-            self.fantome_bleu.move()
+        # Ne déplacer les fantômes que si Pac-Man a réellement bougé
+        if (self.pacman.x, self.pacman.y) != prev_pos:
+            if not self.check_collision():
+                self.fantome_rouge.move()
+                self.fantome_rose.move()
+                self.fantome_orange.move()
+                self.fantome_bleu.move()
 
     def move_right(self, event):
+        prev_pos = (self.pacman.x, self.pacman.y)
         self.pacman.move("droite")
-        if not self.check_collision():
-            self.fantome_rouge.move()
-            self.fantome_rose.move()
-            self.fantome_orange.move()
-            self.fantome_bleu.move()
+        # Ne déplacer les fantômes que si Pac-Man a réellement bougé
+        if (self.pacman.x, self.pacman.y) != prev_pos:
+            if not self.check_collision():
+                self.fantome_rouge.move()
+                self.fantome_rose.move()
+                self.fantome_orange.move()
+                self.fantome_bleu.move()
 
     def check_collision(self):
         if (self.fantome_rouge.x, self.fantome_rouge.y) == (self.pacman.x, self.pacman.y):
