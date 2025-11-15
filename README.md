@@ -1,22 +1,48 @@
-# Pac-Man Game
+# Pac-Man (Python)
 
-Un jeu Pac-Man développé en Python avec Pygame.
+Une version de Pac-Man écrite en Python (interface Tkinter) — jeu éducatif/loisir.
 
-## Structure du projet
+**Statut:** dépôt local de développement.
 
-## Installation
+**Prérequis**
 
-1. Clonez le dépôt
-2. Installez les dépendances :
+- Python 3.10 ou plus récent
+- `pip` pour installer les dépendances
 
-```bash
-pip install -r requirements.txt
+**Installer les dépendances**
+
+Ouvrez PowerShell puis (optionnel: créer et activer un environnement virtuel):
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
 ```
 
-## Exécution
+Remarque: le projet nécessite `pygame` (listé dans `requirements.txt`). Si l'installation de `pygame` échoue, installez la version précompilée compatible avec votre Python/OS ou consultez la documentation officielle de `pygame`.
 
-Pour lancer le jeu :
+**Exécuter le jeu**
 
-```bash
-python src/main.py
+La méthode recommandée (gère correctement les imports relatifs) :
+
+```powershell
+python -m src.main
 ```
+
+Alternatives:
+
+- Exécuter depuis le dossier `src` : `python main.py` (le fichier `src/main.py` contient un fallback d'import, mais l'exécution comme module est préférable).
+
+**Organisation du dépôt**
+
+- `src/` : code source du jeu
+- `requirements.txt` : dépendances Python
+- `README.md` : ce fichier
+
+**Conseils**
+
+- Si vous développez, créez une branche pour vos modifications et committez souvent.
+- Pour exécuter sur d'autres machines, incluez les instructions d'environnement (Python version, virtualenv).
+
+Si vous voulez, je peux formater un guide de contribution plus complet ou ajouter des scripts de lancement.
