@@ -14,4 +14,16 @@ except Exception:
     from GameInterface import GameInterface
 
 if __name__ == "__main__":
-    game = GameInterface()
+    # Utiliser le menu centralisé si disponible
+    try:
+        from .menu import show_menu
+    except Exception:
+        try:
+            from menu import show_menu
+        except Exception:
+            show_menu = None
+
+    if show_menu:
+        show_menu()
+    else:
+        GameInterface()
